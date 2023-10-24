@@ -28,6 +28,7 @@ func main() {
 		return
 	}
 	dg.AddHandler(messageCreate)
+	dg.AddHandler(interactionHandler)
 
 	dg.Identify.Intents = discordgo.IntentsGuildMessages
 
@@ -38,7 +39,17 @@ func main() {
 	}
 
 	fmt.Println("Marin aktif edildi.")
+	dg.UpdateGameStatus(0, "/yardım")
 	dg.UpdateStatusComplex(discordgo.UpdateStatusData{AFK: false, Status: string(discordgo.StatusIdle)})
+
+	commands := []*discordgo.ApplicationCommand{
+		{
+			Name:        "avatar",
+			Description: "Marin avatarınızı gönderir.",
+		},
+	}
+
+	dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "1165767884916658307", commands)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -50,17 +61,5 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Author.ID == s.State.User.ID {
 		return
-	}
-	if m.Content == "avatar" {
-		s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
-			Author: &discordgo.MessageEmbedAuthor{
-				Name: m.Author.Username,
-			},
-			Image: &discordgo.MessageEmbedImage{
-				URL:    m.Author.AvatarURL(m.Author.Avatar),
-				Width:  128,
-				Height: 128,
-			},
-		})
 	}
 }

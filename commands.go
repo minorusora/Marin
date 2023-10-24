@@ -7,13 +7,11 @@ import (
 func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	commandData := i.ApplicationCommandData()
 
-	// Check the name of the command
 	switch commandData.Name {
 	case "avatar":
 		authorName := i.Member.User.Username
-		authorImageURL := i.Member.User.AvatarURL("256") // You can specify the size you want
+		authorImageURL := i.Member.User.AvatarURL("256")
 
-		// Create a new embed
 		embed := &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{
 				Name: authorName,
@@ -23,7 +21,6 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		// Create an interaction response with the embed
 		response := &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -31,7 +28,6 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		// Send the response back to Discord
 		s.InteractionRespond(i.Interaction, response)
 	}
 }

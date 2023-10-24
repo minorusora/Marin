@@ -25,4 +25,4 @@ Bu proje [MIT lisansı](LICENSE) altında lisanslanmıştır. Daha fazla bilgi i
 
 ---
 
-**Marin** | Teşekkür ederiz.
+**Marin** | Katkısı bulunan herkese Teşekkür Ederiz.

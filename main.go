@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	Token string
+	Token                    string
+	defaultMemberPermissions int64 = discordgo.PermissionManageServer
 )
 
 const (
@@ -47,12 +48,11 @@ func main() {
 		log.Printf("%s, veritaban bağlantı hatası.\n", err)
 		return
 	}
-	defer db.Close()
 
 	fmt.Printf("%s, veritabanına başarıyla bağlanıldı.\n", dbname)
 
 	dg.AddHandler(messageCreate)
-	dg.AddHandler(interactionHandler)
+	dg.AddHandler(interactionCreate)
 
 	dg.AddHandler(func(s *discordgo.Session, event *discordgo.GuildMemberAdd) {
 		var rolID string
@@ -66,30 +66,46 @@ func main() {
 			return
 		}
 	})
+	defer db.Close()
 
 	dg.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuilds
 
-	fmt.Println("Marin aktif edildi.")
-	dg.UpdateStatusComplex(discordgo.UpdateStatusData{AFK: false, Status: string(discordgo.StatusIdle)})
+	command := []*discordgo.ApplicationCommand{
+		{
+			Name:        "avatar",
+			Description: "Marin avatarı gönderir.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "kişi",
+					Description: "Bir kişi seçin.",
+					Required:    false,
+				},
+			},
+		},
+		{
+			Name:                     "rolsec",
+			Description:              "Bir rol seçin.",
+			Type:                     discordgo.ChatApplicationCommand,
+			DefaultMemberPermissions: &defaultMemberPermissions,
+		},
+	}
 
+	fmt.Println("Marin aktif edildi.")
 	err = dg.Open()
 	if err != nil {
 		fmt.Println("bağlantı hatası,", err)
 		return
 	}
 
-	commands := []*discordgo.ApplicationCommand{
-		{
-			Name:        "avatar",
-			Description: "Marin avatarınızı gönderir.",
-		},
-		{
-			Name:        "rolayarla",
-			Description: "Sunucuya yeni bir üye katıldığında verilecek rolü ayarlamak için kullanılır.",
-		},
-	}
+	dg.UpdateStatusComplex(discordgo.UpdateStatusData{AFK: false, Status: (string(discordgo.StatusIdle))})
 
-	dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "1165767884916658307", commands)
+	_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", command)
+	if err != nil {
+		log.Println("Error creating slash command:", err)
+		return
+	}
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)

@@ -9,7 +9,8 @@ Marin'i sunucunuza davet etmek ve kullanmaya başlamak için aşağıdaki adıml
 1. Marin botunun [davet bağlantısına](https://discord.com/api/oauth2/authorize?client_id=1166121867602575471&permissions=552376854582&scope=applications.commands%20bot) tıklayarak botu sunucunuza ekleyin.
 
 2. Botunuzu sunucunuza ekledikten sonra, aşağıdaki komutları kullanarak Marin'in özelliklerinden yararlanabilirsiniz:
-   - `/avatar`: Avatarınızı gönderir.
+   - `/avatar`: İsterseniz kendi avatarınızı isterseniz başka bir kişinin avatarını görmenizi sağlar.
+   - `/rolsec`: Yeni bir üye katıldığında ona verilecek otomatik rolü ayarlamak için kullanılır.
 
 ## Destek
 

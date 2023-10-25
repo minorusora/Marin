@@ -10,6 +10,7 @@ import (
 
 func interactionCreate(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	if interaction.Type == discordgo.InteractionApplicationCommand {
+		currentTime := time.Now()
 		switch interaction.ApplicationCommandData().Name {
 		case "avatar":
 			if len(interaction.ApplicationCommandData().Options) > 0 {
@@ -17,7 +18,6 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				if option.Type == discordgo.ApplicationCommandOptionUser {
 					userName := option.UserValue(session).Username
 					userAvatar := option.UserValue(session).AvatarURL("256")
-					currentTime := time.Now()
 
 					embed := &discordgo.MessageEmbed{
 						Title: userName,
@@ -42,7 +42,6 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 					return
 				}
 			} else {
-				currentTime := time.Now()
 				embed := &discordgo.MessageEmbed{
 					Title: interaction.Member.User.Username,
 					Image: &discordgo.MessageEmbedImage{
@@ -57,6 +56,57 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 					},
 				}
 				session.InteractionRespond(interaction.Interaction, response)
+			}
+		case "kanalayarla":
+			if len(interaction.ApplicationCommandData().Options) > 0 {
+				option := interaction.ApplicationCommandData().Options[0]
+				option1 := interaction.ApplicationCommandData().Options[1]
+				kanalID := ""
+				str := ""
+
+				if option.Type == discordgo.ApplicationCommandOptionChannel {
+					// Handle channel option
+					kanalID = option.ChannelValue(session).ID
+				} else if option.Type == discordgo.ApplicationCommandOptionString {
+					// Handle string option
+					kanalID = option.StringValue()
+				}
+
+				if option1.Type == discordgo.ApplicationCommandOptionString {
+					// Handle string option1
+					str = option1.StringValue()
+				}
+				db, err := sql.Open("mysql", dsn(dbname))
+				if err != nil {
+					log.Printf("%s, veritaban bağlantı hatası.\n", err)
+					return
+				}
+
+				var count int
+				err = db.QueryRow("SELECT COUNT(*) FROM sunucuveri WHERE sunucu_id = ?", interaction.GuildID).Scan(&count)
+				if err != nil {
+					panic(err.Error())
+				}
+				if count > 0 {
+					_, err := db.Exec("UPDATE sunucuveri SET kanal_id = ?, giris_mesaj = ? WHERE sunucu_id = ?", kanalID, str, interaction.GuildID)
+					if err != nil {
+						panic(err.Error())
+					}
+				} else {
+					_, err := db.Exec("insert into sunucuveri(sunucu_id, kanal_id, giris_mesaj) values (?, ?, ?)", interaction.GuildID, kanalID, str)
+					if err != nil {
+						panic(err.Error())
+					}
+				}
+
+				defer db.Close()
+				response := discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "<#" + kanalID + ">" + " kanalına gönderilecek mesaj: " + str,
+					},
+				}
+				session.InteractionRespond(interaction.Interaction, &response)
 			}
 		case "rolsec":
 			roles, err := session.GuildRoles(interaction.GuildID)
@@ -145,11 +195,5 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 
 			defer db.Close()
 		}
-	}
-}
-
-func ErrorCheck(err error) {
-	if err != nil {
-		panic(err.Error())
 	}
 }

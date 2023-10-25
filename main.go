@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	_ "github.com/go-sql-driver/mysql"
@@ -61,6 +62,24 @@ func main() {
 			return
 		}
 
+		var kanal string
+		var mesaj string
+		hata := db.QueryRow("SELECT kanal_id, giris_mesaj FROM sunucuveri WHERE sunucu_id=?", event.GuildID).Scan(&kanal, &mesaj)
+		if hata != nil {
+			log.Printf("%s", hata)
+			return
+		}
+
+		currentTime := time.Now()
+		embed := &discordgo.MessageEmbed{
+			Description: event.User.Mention() + " " + mesaj,
+			Timestamp:   currentTime.Format(time.RFC3339),
+		}
+
+		_, err = s.ChannelMessageSendEmbed(kanal, embed)
+		if err != nil {
+			return
+		}
 		err = s.GuildMemberRoleAdd(event.GuildID, event.User.ID, rolID)
 		if err != nil {
 			return
@@ -88,6 +107,26 @@ func main() {
 			Name:                     "rolsec",
 			Description:              "Bir rol seçin.",
 			Type:                     discordgo.ChatApplicationCommand,
+			DefaultMemberPermissions: &defaultMemberPermissions,
+		},
+		{
+			Name:        "kanalayarla",
+			Description: "Bir giriş mesajı ayarlayın.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "kanal",
+					Description: "Bir kanal seçin.",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "mesaj",
+					Description: "Gönderilecek mesajı girin.",
+					Required:    true,
+				},
+			},
 			DefaultMemberPermissions: &defaultMemberPermissions,
 		},
 	}

@@ -1,7 +1,7 @@
 # Marin
 
 <div>
-<img src="marin-logo.png" height="256">
+<img src="marin-logo.png" height="256" style="float: right;">
 <p>Marin, DiscordGo ile geliştirilmeye açık bir bottur. </p>
 </div>
 

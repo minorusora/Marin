@@ -1,7 +1,9 @@
 # Marin
 
+<div>
 <img align="right" alt="Marin Logo" src="marin-logo.png" height="256" >
 Marin, DiscordGo ile geliştirilmeye açık bir bottur.
+</div>
 
 ## Nasıl Kullanılır
 

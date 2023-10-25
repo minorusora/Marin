@@ -65,15 +65,12 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				str := ""
 
 				if option.Type == discordgo.ApplicationCommandOptionChannel {
-					// Handle channel option
 					kanalID = option.ChannelValue(session).ID
 				} else if option.Type == discordgo.ApplicationCommandOptionString {
-					// Handle string option
 					kanalID = option.StringValue()
 				}
 
 				if option1.Type == discordgo.ApplicationCommandOptionString {
-					// Handle string option1
 					str = option1.StringValue()
 				}
 				db, err := sql.Open("mysql", dsn(dbname))

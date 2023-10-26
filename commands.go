@@ -12,6 +12,20 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 	if interaction.Type == discordgo.InteractionApplicationCommand {
 		currentTime := time.Now()
 		switch interaction.ApplicationCommandData().Name {
+		case "yardım":
+			embed := &discordgo.MessageEmbed{
+				Title:  "YARDIM KOMUTLARI",
+				Fields: yardimEmbed,
+				Footer: &discordgo.MessageEmbedFooter{
+					Text: "Marin Geliştirici Ekibi",
+				},
+				Thumbnail: &discordgo.MessageEmbedThumbnail{
+					URL: session.State.User.AvatarURL("128"),
+				},
+				Timestamp: currentTime.Format(time.RFC3339),
+			}
+
+			embedGonder(session, interaction, embed)
 		case "avatar":
 			if len(interaction.ApplicationCommandData().Options) > 0 {
 				option := interaction.ApplicationCommandData().Options[0]
@@ -31,14 +45,7 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 						Timestamp: currentTime.Format(time.RFC3339),
 					}
 
-					response := discordgo.InteractionResponse{
-						Type: discordgo.InteractionResponseChannelMessageWithSource,
-						Data: &discordgo.InteractionResponseData{
-							Embeds: []*discordgo.MessageEmbed{embed},
-						},
-					}
-
-					session.InteractionRespond(interaction.Interaction, &response)
+					embedGonder(session, interaction, embed)
 					return
 				}
 			} else {
@@ -49,15 +56,9 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 					},
 					Timestamp: currentTime.Format(time.RFC3339),
 				}
-				response := &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Embeds: []*discordgo.MessageEmbed{embed},
-					},
-				}
-				session.InteractionRespond(interaction.Interaction, response)
+				embedGonder(session, interaction, embed)
 			}
-		case "kanalayarla":
+		case "girisayarla":
 			if len(interaction.ApplicationCommandData().Options) > 0 {
 				option := interaction.ApplicationCommandData().Options[0]
 				option1 := interaction.ApplicationCommandData().Options[1]
@@ -97,14 +98,41 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				}
 
 				defer db.Close()
-				response := discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Content: "<#" + kanalID + ">" + " kanalına gönderilecek mesaj: " + str,
-					},
+
+				embed := &discordgo.MessageEmbed{
+					Description: "<#" + kanalID + ">" + " kanalına gönderilecek mesaj: " + str,
 				}
-				session.InteractionRespond(interaction.Interaction, &response)
+				embedGonder(session, interaction, embed)
 			}
+		case "kanalolustur":
+			category := interaction.ApplicationCommandData().Options[0].ChannelValue(session).ID
+			channelName := interaction.ApplicationCommandData().Options[1].StringValue()
+
+			newChannel, err := createChannel(session, interaction.GuildID, channelName)
+			if err != nil {
+				return
+			}
+
+			err = moveChannelToCategory(session, newChannel.ID, category)
+			if err != nil {
+				return
+			}
+			embed := &discordgo.MessageEmbed{
+				Description: "<#" + category + ">" + " kategorisine " + newChannel.Mention() + " kanalı oluşturuldu.",
+				Timestamp:   currentTime.Format(time.RFC3339),
+			}
+			embedGonder(session, interaction, embed)
+		case "kanalsil":
+			kanal := interaction.ApplicationCommandData().Options[0].ChannelValue(session).ID
+			_, err := session.ChannelDelete(kanal)
+			if err != nil {
+				return
+			}
+			embed := &discordgo.MessageEmbed{
+				Description: kanal + " ID kanal silindi.",
+				Timestamp:   currentTime.Format(time.RFC3339),
+			}
+			embedGonder(session, interaction, embed)
 		case "rolsec":
 			roles, err := session.GuildRoles(interaction.GuildID)
 			if err != nil {
@@ -151,16 +179,11 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				return
 			}
 
-			responseText := selectedRole.Name + " rolü artık yeni bir üye katıldığında verilecek."
-
-			response := discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: responseText,
-				},
+			embed := &discordgo.MessageEmbed{
+				Description: selectedRole.Name + " rolü artık yeni bir üye katıldığında verilecek.",
 			}
 
-			session.InteractionRespond(interaction.Interaction, &response)
+			embedGonder(session, interaction, embed)
 
 			err = session.ChannelMessageDelete(interaction.ChannelID, interaction.Message.ID)
 			if err != nil {
@@ -193,4 +216,33 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 			defer db.Close()
 		}
 	}
+}
+
+func embedGonder(session *discordgo.Session, interaction *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) {
+	response := &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{embed},
+		},
+	}
+	session.InteractionRespond(interaction.Interaction, response)
+}
+
+func createChannel(session *discordgo.Session, guildID, channelName string) (*discordgo.Channel, error) {
+	channel, err := session.GuildChannelCreate(guildID, channelName, discordgo.ChannelTypeGuildText)
+	if err != nil {
+		return nil, err
+	}
+	return channel, nil
+}
+
+func moveChannelToCategory(session *discordgo.Session, channelID, categoryID string) error {
+	editData := &discordgo.ChannelEdit{
+		ParentID: categoryID,
+	}
+	_, err := session.ChannelEditComplex(channelID, editData)
+	if err != nil {
+		return err
+	}
+	return nil
 }

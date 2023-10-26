@@ -17,6 +17,7 @@ import (
 var (
 	Token                    string
 	defaultMemberPermissions int64 = discordgo.PermissionManageServer
+	kanalYetkisi             int64 = discordgo.PermissionManageChannels
 )
 
 const (
@@ -87,7 +88,7 @@ func main() {
 	})
 	defer db.Close()
 
-	dg.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuilds
+	dg.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsGuilds | discordgo.IntentGuildPresences | discordgo.IntentsGuildPresences
 
 	command := []*discordgo.ApplicationCommand{
 		{
@@ -110,7 +111,7 @@ func main() {
 			DefaultMemberPermissions: &defaultMemberPermissions,
 		},
 		{
-			Name:        "kanalayarla",
+			Name:        "girisayarla",
 			Description: "Bir giriş mesajı ayarlayın.",
 			Type:        discordgo.ChatApplicationCommand,
 			Options: []*discordgo.ApplicationCommandOption{
@@ -129,6 +130,46 @@ func main() {
 			},
 			DefaultMemberPermissions: &defaultMemberPermissions,
 		},
+		{
+			Name:        "kanalolustur",
+			Description: "Kanal oluşturmak için kullanılır.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "kategori",
+					Description: "Bir kategori seçin.",
+					Required:    true,
+				},
+
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "isim",
+					Description: "Oluşturmak istediğiniz kanalın adını girin.",
+					Required:    true,
+				},
+			},
+			DefaultMemberPermissions: &kanalYetkisi,
+		},
+		{
+			Name:        "kanalsil",
+			Description: "Kanal silmek için kullanılır.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "kanal",
+					Description: "Bir kanal seçin.",
+					Required:    true,
+				},
+			},
+			DefaultMemberPermissions: &kanalYetkisi,
+		},
+		{
+			Name:        "yardım",
+			Description: "Komutları gösterir.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
 	}
 
 	fmt.Println("Marin aktif edildi.")
@@ -138,7 +179,19 @@ func main() {
 		return
 	}
 
-	dg.UpdateStatusComplex(discordgo.UpdateStatusData{AFK: false, Status: (string(discordgo.StatusIdle))})
+	activity := discordgo.Activity{
+		Name: "/yardım",
+		Type: discordgo.ActivityTypeGame,
+	}
+
+	dg.UpdateStatusComplex(discordgo.UpdateStatusData{
+
+		Activities: []*discordgo.Activity{
+			&activity,
+		},
+		AFK:    false,
+		Status: (string(discordgo.StatusIdle)),
+	})
 
 	_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", command)
 	if err != nil {

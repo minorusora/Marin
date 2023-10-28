@@ -233,7 +233,7 @@ func xpKontrol(session *discordgo.Session, userID string, guildID string, channe
 	}
 	defer db.Close()
 	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ?", userID).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ? and sunucu_id = ?", userID, guildID).Scan(&count)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -246,7 +246,7 @@ func xpKontrol(session *discordgo.Session, userID string, guildID string, channe
 	} else {
 		toplam := levelKontrol(userID) * 240
 		if xpCheck(userID) >= toplam {
-			_, err := db.Exec("UPDATE xp SET level = ? WHERE kisi_id = ?", levelKontrol(userID)+1, userID)
+			_, err := db.Exec("UPDATE xp SET level = ? WHERE kisi_id = ? and sunucu_id = ?", levelKontrol(userID)+1, userID, guildID)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -254,7 +254,7 @@ func xpKontrol(session *discordgo.Session, userID string, guildID string, channe
 			mesaj := fmt.Sprintf("<@"+userID+">"+" tebrikler, %d. seviyeye ulaştınız!", levelKontrol(userID))
 			session.ChannelMessageSend(channelID, mesaj)
 		} else {
-			_, err := db.Exec("UPDATE xp SET xp = ? WHERE kisi_id = ?", xpCheck(userID)+10, userID)
+			_, err := db.Exec("UPDATE xp SET xp = ? WHERE kisi_id = ? and sunucu_id = ?", xpCheck(userID)+10, userID, guildID)
 			if err != nil {
 				panic(err.Error())
 			}

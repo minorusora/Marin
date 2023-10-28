@@ -11,8 +11,13 @@ Marin'i sunucunuza davet etmek ve kullanmaya başlamak için aşağıdaki adıml
 
 2. Botunuzu sunucunuza ekledikten sonra, aşağıdaki komutları kullanarak Marin'in özelliklerinden yararlanabilirsiniz:
    - `/avatar`: İsterseniz kendi avatarınızı isterseniz başka bir kişinin avatarını görmenizi sağlar.
-   - `/rolsec`: Yeni bir üye katıldığında ona verilecek otomatik rolü ayarlamak için kullanılır.
-   - `/kanalayarla`: Yeni üye girişlerinde; Göndereceğiniz mesajı ve kanalı ayarlamak için kullanılır.
+   - `/param`: Paranıza bakmak için kullanılır.
+   - `/çiftliğim`: Çiftliğinizin durumuna bakmak için kullanılır.
+   - `/hayvanal`: Çiftliğinize hayvan almak için kullanılır.
+   - `/rolseç`: Yeni bir üye katıldığında ona verilecek otomatik rolü ayarlamak için kullanılır.
+   - `/girişayarla`: Yeni üye girişlerinde; Göndereceğiniz mesajı ve kanalı ayarlamak için kullanılır.
+   - `/kanaloluştur`: Yeni bir kanal oluşturmak için kullanılır.
+   - `/kanalsil`: Seçilen kanalı silmek için kullanılır.
 
 ## Destek
 

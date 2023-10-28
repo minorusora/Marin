@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -58,7 +60,60 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				}
 				embedGonder(session, interaction, embed)
 			}
-		case "girisayarla":
+		case "param":
+			mesaj := fmt.Sprintf("%s, %s MC sahibisin!", interaction.Member.Mention(), formatNumber(paraCek(interaction.Member.User.ID)))
+			embed := &discordgo.MessageEmbed{
+				Description: mesaj,
+				Timestamp:   currentTime.Format(time.RFC3339),
+			}
+			embedGonder(session, interaction, embed)
+		case "çiftliğim":
+			userID := interaction.Member.User.ID
+			str := fmt.Sprintf("Çiftlik Seviyesi: `%d`\n \nİnek Sayısı: `%d Adet` - Gelir: `%s MC`", ciftlikSeviye(userID), inekGet_Count(userID), formatNumber(ciftlikSeviye(userID)*10))
+			str1 := fmt.Sprintf(str+"\nKoyun Sayısı: `%d Adet` - Gelir: `%s MC`\nTavuk Sayısı: `%d Adet` - Gelir: `%s MC`", koyunGet_Count(userID), formatNumber(ciftlikSeviye(userID)*6), tavukGet_Count(userID), formatNumber(ciftlikSeviye(userID)*3))
+			mesaj := fmt.Sprintf(str1 + "\n \n`Hayvan gelirleri, çiftlik seviyesine bağlı olarak değişir.`\n`Gelirler 3 saatte bir verilir.`")
+			embed := &discordgo.MessageEmbed{
+				Title:       interaction.Member.User.Username + " Çiftliği",
+				Description: mesaj,
+				Timestamp:   currentTime.Format(time.RFC3339),
+			}
+			embedGonder(session, interaction, embed)
+		case "hayvanal":
+			hayvan := interaction.ApplicationCommandData().Options[0].StringValue()
+			adet := interaction.ApplicationCommandData().Options[1].IntValue()
+			var fiyat int64
+			if strings.Contains(hayvan, "İnek") {
+				fiyat = 25000
+			} else if strings.Contains(hayvan, "Koyun") {
+				fiyat = 12500
+			} else if strings.Contains(hayvan, "Tavuk") {
+				fiyat = 5000
+			} else {
+				embed := &discordgo.MessageEmbed{
+					Description: "Geçersiz hayvan türü.",
+				}
+				embedGonder(session, interaction, embed)
+				return
+			}
+
+			toplam := adet * fiyat
+			kullaniciParasi := int64(paraCek(interaction.Member.User.ID))
+			kalanPara := kullaniciParasi - toplam
+			if toplam <= int64(kullaniciParasi) {
+				paraKayit(session, interaction.Member.User.ID, kalanPara)
+				hayvanOlustur(hayvan, adet, interaction.Member.User.ID)
+				embed := &discordgo.MessageEmbed{
+					Description: fmt.Sprintf("%d adet %s satın alındı. Toplam fiyat: %s MC", adet, hayvan, formatNumber(int(toplam))),
+				}
+				embedGonder(session, interaction, embed)
+			} else {
+				embed := &discordgo.MessageEmbed{
+					Description: fmt.Sprintf("Yeterli paranız yok. Toplam fiyat: %s MC", formatNumber(int(toplam))),
+				}
+				embedGonder(session, interaction, embed)
+			}
+
+		case "girişayarla":
 			if len(interaction.ApplicationCommandData().Options) > 0 {
 				option := interaction.ApplicationCommandData().Options[0]
 				option1 := interaction.ApplicationCommandData().Options[1]
@@ -104,7 +159,7 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				}
 				embedGonder(session, interaction, embed)
 			}
-		case "kanalolustur":
+		case "kanaloluştur":
 			category := interaction.ApplicationCommandData().Options[0].ChannelValue(session).ID
 			channelName := interaction.ApplicationCommandData().Options[1].StringValue()
 
@@ -133,7 +188,7 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				Timestamp:   currentTime.Format(time.RFC3339),
 			}
 			embedGonder(session, interaction, embed)
-		case "rolsec":
+		case "rolseç":
 			roles, err := session.GuildRoles(interaction.GuildID)
 			if err != nil {
 				log.Println("Roller çekilemedi:", err)
@@ -216,33 +271,4 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 			defer db.Close()
 		}
 	}
-}
-
-func embedGonder(session *discordgo.Session, interaction *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) {
-	response := &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{embed},
-		},
-	}
-	session.InteractionRespond(interaction.Interaction, response)
-}
-
-func createChannel(session *discordgo.Session, guildID, channelName string) (*discordgo.Channel, error) {
-	channel, err := session.GuildChannelCreate(guildID, channelName, discordgo.ChannelTypeGuildText)
-	if err != nil {
-		return nil, err
-	}
-	return channel, nil
-}
-
-func moveChannelToCategory(session *discordgo.Session, channelID, categoryID string) error {
-	editData := &discordgo.ChannelEdit{
-		ParentID: categoryID,
-	}
-	_, err := session.ChannelEditComplex(channelID, editData)
-	if err != nil {
-		return err
-	}
-	return nil
 }

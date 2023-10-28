@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -105,13 +106,56 @@ func main() {
 			},
 		},
 		{
-			Name:                     "rolsec",
-			Description:              "Bir rol seçin.",
+			Name:        "param",
+			Description: "Paranızı gösterir.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
+			Name:        "çiftliğim",
+			Description: "Çiftliğinizin seviyesini ve sahip olduğunuz hayvanları gösterir.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
+			Name:        "hayvanal",
+			Description: "Çiftliğinize hayvan almak için kullanılır.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "hayvan",
+					Description: "Alacağınız hayvanı seçin.",
+					Required:    true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "İnek",
+							Value: "İnek",
+						},
+						{
+							Name:  "Koyun",
+							Value: "Koyun",
+						},
+						{
+							Name:  "Tavuk",
+							Value: "Tavuk",
+						},
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "adet",
+					Description: "Kaç adet alacağınızı girin.",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:                     "rolseç",
+			Description:              "Girişte üyelere verilecek rolü seçmek için kullanılır.",
 			Type:                     discordgo.ChatApplicationCommand,
 			DefaultMemberPermissions: &defaultMemberPermissions,
 		},
 		{
-			Name:        "girisayarla",
+			Name:        "girişayarla",
 			Description: "Bir giriş mesajı ayarlayın.",
 			Type:        discordgo.ChatApplicationCommand,
 			Options: []*discordgo.ApplicationCommandOption{
@@ -131,7 +175,7 @@ func main() {
 			DefaultMemberPermissions: &defaultMemberPermissions,
 		},
 		{
-			Name:        "kanalolustur",
+			Name:        "kanaloluştur",
 			Description: "Kanal oluşturmak için kullanılır.",
 			Type:        discordgo.ChatApplicationCommand,
 			Options: []*discordgo.ApplicationCommandOption{
@@ -209,5 +253,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Author.ID == s.State.User.ID {
 		return
+	}
+	mesaj := strings.ToLower(m.Content)
+	if mesaj == "selam" {
+		s.ChannelMessageSendReply(m.ChannelID, "Selam!", m.Reference())
+	} else if mesaj == "merhaba" {
+		s.ChannelMessageSendReply(m.ChannelID, "Merhaba!", m.Reference())
 	}
 }

@@ -204,9 +204,18 @@ func xpCheck(userID string) int {
 	defer db.Close()
 
 	var xp int
-	err = db.QueryRow("SELECT xp FROM xp WHERE kisi_id = ?", userID).Scan(&xp)
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ?", userID).Scan(&count)
 	if err != nil {
 		panic(err.Error())
+	}
+	if count > 0 {
+		err = db.QueryRow("SELECT xp FROM xp WHERE kisi_id = ?", userID).Scan(&xp)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		return 0
 	}
 	return xp
 }
@@ -219,9 +228,18 @@ func levelKontrol(userID string) int {
 	defer db.Close()
 
 	var level int
-	err = db.QueryRow("SELECT level FROM xp WHERE kisi_id = ?", userID).Scan(&level)
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ?", userID).Scan(&count)
 	if err != nil {
 		panic(err.Error())
+	}
+	if count > 0 {
+		err = db.QueryRow("SELECT level FROM xp WHERE kisi_id = ?", userID).Scan(&level)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		return 1
 	}
 	return level
 }

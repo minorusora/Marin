@@ -14,6 +14,7 @@ Marin'i sunucunuza davet etmek ve kullanmaya başlamak için aşağıdaki adıml
    - `/param`: Paranıza bakmak için kullanılır.
    - `/çiftliğim`: Çiftliğinizin durumuna bakmak için kullanılır.
    - `/hayvanal`: Çiftliğinize hayvan almak için kullanılır.
+   - `/seviyem`: Seviyenize bakmak için kullanılır.
    - `/rolseç`: Yeni bir üye katıldığında ona verilecek otomatik rolü ayarlamak için kullanılır.
    - `/girişayarla`: Yeni üye girişlerinde; Göndereceğiniz mesajı ve kanalı ayarlamak için kullanılır.
    - `/kanaloluştur`: Yeni bir kanal oluşturmak için kullanılır.

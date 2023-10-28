@@ -162,9 +162,21 @@ func ciftlikSeviye(userID string) int {
 	defer db.Close()
 
 	var ciftlikSeviye int
-	err = db.QueryRow("SELECT ciftlik_seviye FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&ciftlikSeviye)
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
 	if err != nil {
 		panic(err.Error())
+	}
+	if count > 0 {
+		err = db.QueryRow("SELECT ciftlik_seviye FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&ciftlikSeviye)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 1250)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 	return ciftlikSeviye
 }

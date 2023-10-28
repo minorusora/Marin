@@ -2,8 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -96,7 +98,7 @@ func paraCek(userID string) int {
 		if err != nil {
 			panic(err.Error())
 		} else {
-			return para
+			return 1250
 		}
 	} else {
 		err = db.QueryRow("SELECT para FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&para)
@@ -191,5 +193,151 @@ func hayvanOlustur(hayvan string, adet int64, userID string) {
 				return
 			}
 		}
+	}
+}
+
+func xpCheck(userID string) int {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	var xp int
+	err = db.QueryRow("SELECT xp FROM xp WHERE kisi_id = ?", userID).Scan(&xp)
+	if err != nil {
+		panic(err.Error())
+	}
+	return xp
+}
+
+func levelKontrol(userID string) int {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	var level int
+	err = db.QueryRow("SELECT level FROM xp WHERE kisi_id = ?", userID).Scan(&level)
+	if err != nil {
+		panic(err.Error())
+	}
+	return level
+}
+
+func xpKontrol(session *discordgo.Session, userID string, guildID string, channelID string) error {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if count <= 0 {
+		_, err := db.Exec("INSERT INTO xp (kisi_id, sunucu_id) VALUES (?, ?)", userID, guildID)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		toplam := levelKontrol(userID) * 240
+		if xpCheck(userID) >= toplam {
+			_, err := db.Exec("UPDATE xp SET level = ? WHERE kisi_id = ?", levelKontrol(userID)+1, userID)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			mesaj := fmt.Sprintf("<@"+userID+">"+" tebrikler, %d. seviyeye ulaştınız!", levelKontrol(userID))
+			session.ChannelMessageSend(channelID, mesaj)
+		} else {
+			_, err := db.Exec("UPDATE xp SET xp = ? WHERE kisi_id = ?", xpCheck(userID)+10, userID)
+			if err != nil {
+				panic(err.Error())
+			}
+		}
+	}
+	return err
+}
+
+func inekGelir(db *sql.DB) {
+	rows, err := db.Query("SELECT gelir, sahip_id FROM inekler WHERE sahip_id != 0")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var gelir int
+		var userID string
+		err := rows.Scan(&gelir, &userID)
+		if err != nil {
+			return
+		}
+		kullaniciGuncelle(userID, gelir)
+	}
+}
+
+func koyunGelir(db *sql.DB) {
+	rows, err := db.Query("SELECT gelir, sahip_id FROM koyunlar WHERE sahip_id != 0")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var gelir int
+		var userID string
+		err := rows.Scan(&gelir, &userID)
+		if err != nil {
+			return
+		}
+		kullaniciGuncelle(userID, gelir)
+	}
+}
+
+func tavukGelir(db *sql.DB) {
+	rows, err := db.Query("SELECT gelir, sahip_id FROM tavuklar WHERE sahip_id != 0")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var gelir int
+		var userID string
+		err := rows.Scan(&gelir, &userID)
+		if err != nil {
+			return
+		}
+		kullaniciGuncelle(userID, gelir)
+	}
+}
+
+func ciftlikTimer() {
+	for {
+		db, err := sql.Open("mysql", dsn(dbname))
+		if err != nil {
+			panic(err.Error())
+		}
+		inekGelir(db)
+		koyunGelir(db)
+		tavukGelir(db)
+		time.Sleep(3 * time.Hour)
+	}
+}
+
+func kullaniciGuncelle(userID string, para int) {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	_, err = db.Exec("UPDATE kullaniciveri SET para = para + ? WHERE kisi_id = ?", para, userID)
+	if err != nil {
+		return
 	}
 }

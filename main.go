@@ -111,6 +111,11 @@ func main() {
 			Type:        discordgo.ChatApplicationCommand,
 		},
 		{
+			Name:        "seviyem",
+			Description: "Seviyenizi gösterir.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
 			Name:        "çiftliğim",
 			Description: "Çiftliğinizin seviyesini ve sahip olduğunuz hayvanları gösterir.",
 			Type:        discordgo.ChatApplicationCommand,
@@ -222,6 +227,9 @@ func main() {
 		fmt.Println("bağlantı hatası,", err)
 		return
 	}
+	defer dg.Close()
+
+	go ciftlikTimer()
 
 	activity := discordgo.Activity{
 		Name: "/yardım",
@@ -246,7 +254,6 @@ func main() {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
-	dg.Close()
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -254,6 +261,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+	xpKontrol(s, m.Author.ID, m.Member.GuildID, m.ChannelID)
 	mesaj := strings.ToLower(m.Content)
 	if mesaj == "selam" {
 		s.ChannelMessageSendReply(m.ChannelID, "Selam!", m.Reference())

@@ -15,7 +15,7 @@ var yardimEmbed = []*discordgo.MessageEmbedField{
 		Value: "`/param:` Paranıza bakmak için kullanılır.",
 	},
 	{
-		Value: "`/çiftliğim:` Çiftliğinizin durumuna bakmak için kullanılır",
+		Value: "`/çiftliğim:` Çiftliğinizin durumuna bakmak için kullanılır.",
 	},
 	{
 		Value: "`/hayvanal:` Çiftliğinize hayvan almak için kullanılır.",

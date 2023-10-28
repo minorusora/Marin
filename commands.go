@@ -61,7 +61,14 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				embedGonder(session, interaction, embed)
 			}
 		case "param":
-			mesaj := fmt.Sprintf("%s, %s MC sahibisin!", interaction.Member.Mention(), formatNumber(paraCek(interaction.Member.User.ID)))
+			mesaj := fmt.Sprintf("%s, %s MC sahibisiniz!", interaction.Member.Mention(), formatNumber(paraCek(interaction.Member.User.ID)))
+			embed := &discordgo.MessageEmbed{
+				Description: mesaj,
+				Timestamp:   currentTime.Format(time.RFC3339),
+			}
+			embedGonder(session, interaction, embed)
+		case "seviyem":
+			mesaj := fmt.Sprintf("%s, %s. seviyedesiniz. (%s/%s)", interaction.Member.Mention(), formatNumber(levelKontrol(interaction.Member.User.ID)), formatNumber(xpCheck(interaction.Member.User.ID)), formatNumber(levelKontrol(interaction.Member.User.ID)*240))
 			embed := &discordgo.MessageEmbed{
 				Description: mesaj,
 				Timestamp:   currentTime.Format(time.RFC3339),

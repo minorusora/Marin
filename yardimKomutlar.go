@@ -18,7 +18,13 @@ var yardimEmbed = []*discordgo.MessageEmbedField{
 		Value: "`/çiftliğim:` Çiftliğinizin durumuna bakmak için kullanılır.",
 	},
 	{
+		Value: "`/çiftlikseviye:` Çiftliğinizin seviyesini yükseltmek için kullanılır.",
+	},
+	{
 		Value: "`/hayvanal:` Çiftliğinize hayvan almak için kullanılır.",
+	},
+	{
+		Value: "`/seviyem:` Seviyenizi ve XP durumunuzu gösterir.",
 	},
 	{
 		Name: "**Moderasyon**",
@@ -34,5 +40,8 @@ var yardimEmbed = []*discordgo.MessageEmbedField{
 	},
 	{
 		Value: "`/kanalsil:` Seçilen kanalı silmek için kullanılır.",
+	},
+	{
+		Value: "`/mesajsil:` Kanaldaki mesajları silmek için kullanılır.",
 	},
 }

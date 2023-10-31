@@ -19,6 +19,7 @@ var (
 	Token                    string
 	defaultMemberPermissions int64 = discordgo.PermissionManageServer
 	kanalYetkisi             int64 = discordgo.PermissionManageChannels
+	mesajYetkisi             int64 = discordgo.PermissionManageMessages
 )
 
 const (
@@ -121,6 +122,11 @@ func main() {
 			Type:        discordgo.ChatApplicationCommand,
 		},
 		{
+			Name:        "çiftlikseviye",
+			Description: "Çiftliğinizin seviyesini yükseltmek için kullanılır.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
 			Name:        "hayvanal",
 			Description: "Çiftliğinize hayvan almak için kullanılır.",
 			Type:        discordgo.ChatApplicationCommand,
@@ -212,6 +218,20 @@ func main() {
 					Required:    true,
 				},
 			},
+			DefaultMemberPermissions: &mesajYetkisi,
+		},
+		{
+			Name:        "mesajsil",
+			Description: "Mesaj silmek için kullanılır.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "adet",
+					Description: "Kaç adet mesaj sileceğinizi girin.",
+					Required:    true,
+				},
+			},
 			DefaultMemberPermissions: &kanalYetkisi,
 		},
 		{
@@ -261,7 +281,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-	xpKontrol(s, m.Author.ID, m.Member.GuildID, m.ChannelID)
+	if m.WebhookID != "" {
+		return
+	}
+
+	xpKontrol(s, m.Author.ID, m.GuildID, m.ChannelID)
 	mesaj := strings.ToLower(m.Content)
 	if mesaj == "selam" {
 		s.ChannelMessageSendReply(m.ChannelID, "Selam!", m.Reference())

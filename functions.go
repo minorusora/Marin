@@ -70,7 +70,7 @@ func paraKayit(session *discordgo.Session, userID string, para int64) {
 			panic(err.Error())
 		}
 	} else {
-		_, err := db.Exec("insert into kullaniciveri(kisi_id, para, ciftlik_seviye) values (?, ?, ?)", userID, 1250, 1)
+		_, err := db.Exec("insert into kullaniciveri(kisi_id, para, ciftlik_seviye) values (?, ?, ?)", userID, 100000, 1)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -94,11 +94,11 @@ func paraCek(userID string) int {
 	}
 
 	if count <= 0 {
-		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para, ciftlik_seviye) VALUES (?, ?, ?)", userID, 1250, 1)
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para, ciftlik_seviye) VALUES (?, ?, ?)", userID, 100000, 1)
 		if err != nil {
 			panic(err.Error())
 		} else {
-			return 1250
+			return 100000
 		}
 	} else {
 		err = db.QueryRow("SELECT para FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&para)
@@ -173,12 +173,94 @@ func ciftlikSeviye(userID string) int {
 			panic(err.Error())
 		}
 	} else {
-		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 1250)
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
 		if err != nil {
 			panic(err.Error())
 		}
 	}
 	return ciftlikSeviye
+}
+
+func ciftlikSeviyeYukselt(userID string) {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+	if count > 0 {
+		_, err := db.Exec("UPDATE kullaniciveri SET ciftlik_seviye = ciftlik_seviye + 1 WHERE kisi_id = ?", userID)
+		if err != nil {
+			panic(err.Error())
+		}
+		hayvanGuncelle(db, userID)
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+}
+
+func hayvanGuncelle(db *sql.DB, userID string) {
+
+	rows, err := db.Query("SELECT sahip_id FROM inekler WHERE sahip_id = ?", userID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID string
+		err := rows.Scan(&userID)
+		if err != nil {
+			return
+		}
+		_, err = db.Exec("UPDATE inekler SET gelir = ? WHERE sahip_id = ?", ciftlikSeviye(userID)*10, userID)
+		if err != nil {
+			return
+		}
+	}
+
+	rows, err = db.Query("SELECT sahip_id FROM koyunlar WHERE sahip_id = ?", userID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID string
+		err := rows.Scan(&userID)
+		if err != nil {
+			return
+		}
+		_, err = db.Exec("UPDATE koyunlar SET gelir = ? WHERE sahip_id = ?", ciftlikSeviye(userID)*6, userID)
+		if err != nil {
+			return
+		}
+	}
+
+	rows, err = db.Query("SELECT sahip_id FROM tavuklar WHERE sahip_id = ?", userID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID string
+		err := rows.Scan(&userID)
+		if err != nil {
+			return
+		}
+		_, err = db.Exec("UPDATE tavuklar SET gelir = ? WHERE sahip_id = ?", ciftlikSeviye(userID)*3, userID)
+		if err != nil {
+			return
+		}
+	}
 }
 
 func hayvanOlustur(hayvan string, adet int64, userID string) {
@@ -307,7 +389,7 @@ func inekGelir(db *sql.DB) {
 		if err != nil {
 			return
 		}
-		kullaniciGuncelle(userID, gelir)
+		kullaniciGuncelle(db, userID, gelir)
 	}
 }
 
@@ -325,7 +407,7 @@ func koyunGelir(db *sql.DB) {
 		if err != nil {
 			return
 		}
-		kullaniciGuncelle(userID, gelir)
+		kullaniciGuncelle(db, userID, gelir)
 	}
 }
 
@@ -343,7 +425,7 @@ func tavukGelir(db *sql.DB) {
 		if err != nil {
 			return
 		}
-		kullaniciGuncelle(userID, gelir)
+		kullaniciGuncelle(db, userID, gelir)
 	}
 }
 
@@ -360,13 +442,8 @@ func ciftlikTimer() {
 	}
 }
 
-func kullaniciGuncelle(userID string, para int) {
-	db, err := sql.Open("mysql", dsn(dbname))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = db.Exec("UPDATE kullaniciveri SET para = para + ? WHERE kisi_id = ?", para, userID)
+func kullaniciGuncelle(db *sql.DB, userID string, para int) {
+	_, err := db.Exec("UPDATE kullaniciveri SET para = para + ? WHERE kisi_id = ?", para, userID)
 	if err != nil {
 		return
 	}

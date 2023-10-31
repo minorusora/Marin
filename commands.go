@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -78,13 +79,32 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 			userID := interaction.Member.User.ID
 			str := fmt.Sprintf("Çiftlik Seviyesi: `%d`\n \nİnek Sayısı: `%d Adet` - Gelir: `%s MC`", ciftlikSeviye(userID), inekGet_Count(userID), formatNumber(ciftlikSeviye(userID)*10))
 			str1 := fmt.Sprintf(str+"\nKoyun Sayısı: `%d Adet` - Gelir: `%s MC`\nTavuk Sayısı: `%d Adet` - Gelir: `%s MC`", koyunGet_Count(userID), formatNumber(ciftlikSeviye(userID)*6), tavukGet_Count(userID), formatNumber(ciftlikSeviye(userID)*3))
-			mesaj := fmt.Sprintf(str1 + "\n \n`Hayvan gelirleri, çiftlik seviyesine bağlı olarak değişir.`\n`Gelirler 3 saatte bir verilir.`")
+			mesaj := fmt.Sprintf(str1 + "\n \n`Hayvan gelirleri, çiftlik seviyesine bağlı olarak değişir.`\n`Gelirler 3 saatte bir verilir ve gelir, toplam değil tane fiyatıdır.`")
 			embed := &discordgo.MessageEmbed{
 				Title:       interaction.Member.User.Username + " Çiftliği",
 				Description: mesaj,
 				Timestamp:   currentTime.Format(time.RFC3339),
 			}
 			embedGonder(session, interaction, embed)
+		case "çiftlikseviye":
+			kullaniciParasi := int64(paraCek(interaction.Member.User.ID))
+			var seviye int = ciftlikSeviye(interaction.Member.User.ID)
+			kalanPara := int(kullaniciParasi) - (seviye * 5000)
+			if seviye*5000 <= int(kullaniciParasi) {
+				ciftlikSeviyeYukselt(interaction.Member.User.ID)
+				paraKayit(session, interaction.Member.User.ID, int64(kalanPara))
+				mesaj := fmt.Sprintf("Çiftliğinizin %s MC karşılığında seviyesi yükseltildi, şu an %d seviye çiftliğe sahipsiniz.", formatNumber(ciftlikSeviye(interaction.Member.User.ID)*5000), ciftlikSeviye(interaction.Member.User.ID))
+				embed := &discordgo.MessageEmbed{
+					Description: mesaj,
+					Timestamp:   currentTime.Format(time.RFC3339),
+				}
+				embedGonder(session, interaction, embed)
+			} else {
+				embed := &discordgo.MessageEmbed{
+					Description: fmt.Sprintf("Yeterli paranız yok. Toplam fiyat: %s MC", formatNumber(ciftlikSeviye(interaction.Member.User.ID)*5000)),
+				}
+				embedGonder(session, interaction, embed)
+			}
 		case "hayvanal":
 			hayvan := interaction.ApplicationCommandData().Options[0].StringValue()
 			adet := interaction.ApplicationCommandData().Options[1].IntValue()
@@ -195,6 +215,28 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 				Timestamp:   currentTime.Format(time.RFC3339),
 			}
 			embedGonder(session, interaction, embed)
+		case "mesajsil":
+			messageCountstr := interaction.ApplicationCommandData().Options[0].StringValue()
+			messageCount, err := strconv.Atoi(messageCountstr)
+			if err != nil {
+				return
+			}
+
+			messages, err := session.ChannelMessages(interaction.ChannelID, messageCount, "", "", "")
+			if err == nil {
+				for _, msg := range messages {
+					err := session.ChannelMessageDelete(interaction.ChannelID, msg.ID)
+					if err != nil {
+						continue
+					}
+					currentTime := time.Now()
+					embed := &discordgo.MessageEmbed{
+						Description: messageCountstr + " adet mesaj silindi.",
+						Timestamp:   currentTime.Format(time.RFC3339),
+					}
+					embedGonder(session, interaction, embed)
+				}
+			}
 		case "rolseç":
 			roles, err := session.GuildRoles(interaction.GuildID)
 			if err != nil {

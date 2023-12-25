@@ -117,7 +117,7 @@ func inekGet_Count(userID string) int {
 	defer db.Close()
 
 	var inek_sayi int
-	err = db.QueryRow("SELECT COUNT(*) FROM inekler WHERE sahip_id = ?", userID).Scan(&inek_sayi)
+	err = db.QueryRow("SELECT inek_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&inek_sayi)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -132,7 +132,7 @@ func koyunGet_Count(userID string) int {
 	defer db.Close()
 
 	var koyun_sayi int
-	err = db.QueryRow("SELECT COUNT(*) FROM koyunlar WHERE sahip_id = ?", userID).Scan(&koyun_sayi)
+	err = db.QueryRow("SELECT koyun_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&koyun_sayi)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -147,11 +147,169 @@ func tavukGet_Count(userID string) int {
 	defer db.Close()
 
 	var tavuk_sayi int
-	err = db.QueryRow("SELECT COUNT(*) FROM tavuklar WHERE sahip_id = ?", userID).Scan(&tavuk_sayi)
+	err = db.QueryRow("SELECT tavuk_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&tavuk_sayi)
 	if err != nil {
 		panic(err.Error())
 	}
 	return tavuk_sayi
+}
+
+func hayvanSeviye(userID string) int {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	var hayvanSeviye int
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+	if count > 0 {
+		err = db.QueryRow("SELECT hayvan_seviye FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&hayvanSeviye)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	return hayvanSeviye
+}
+
+func hayvanGuncelle(userID string) {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+	if count > 0 {
+		_, err := db.Exec("UPDATE kullaniciveri SET hayvan_seviye = hayvan_seviye + 1 WHERE kisi_id = ?", userID)
+		if err != nil {
+			panic(err.Error())
+		}
+		_, err = db.Exec("UPDATE kullaniciveri SET inek_gelir = ?, koyun_gelir = ?, tavuk_gelir = ? WHERE kisi_id = ?", hayvanSeviye(userID)*10, hayvanSeviye(userID)*6, hayvanSeviye(userID)*3, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+}
+
+func tohumSayisi(tur int, userID string) int {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	var count int
+	var sayi int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+	if count > 0 {
+		if tur == 1 {
+			err = db.QueryRow("SELECT bugdaytohum_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&sayi)
+			if err != nil {
+				panic(err.Error())
+			}
+		} else if tur == 2 {
+			err = db.QueryRow("SELECT havuctohum_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&sayi)
+			if err != nil {
+				panic(err.Error())
+			}
+		}
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	return sayi
+}
+
+func get_EkiliTohum(tur int, userID string) int {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	var count int
+	var sayi int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+	if count > 0 {
+		if tur == 1 {
+			err = db.QueryRow("SELECT bugdayekili_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&sayi)
+			if err != nil {
+				panic(err.Error())
+			}
+		} else if tur == 2 {
+			err = db.QueryRow("SELECT havucekili_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&sayi)
+			if err != nil {
+				panic(err.Error())
+			}
+		}
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	return sayi
+}
+
+func mahsulSayi(tur int, userID string) int {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	var count int
+	var sayi int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+	if count > 0 {
+		if tur == 1 {
+			err = db.QueryRow("SELECT bugday_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&sayi)
+			if err != nil {
+				panic(err.Error())
+			}
+		} else if tur == 2 {
+			err = db.QueryRow("SELECT havuc_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&sayi)
+			if err != nil {
+				panic(err.Error())
+			}
+		}
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	return sayi
 }
 
 func ciftlikSeviye(userID string) int {
@@ -181,6 +339,139 @@ func ciftlikSeviye(userID string) int {
 	return ciftlikSeviye
 }
 
+func get_Tohum(tohum string, userID string) int64 {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	var adet int64
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&count)
+	if err != nil {
+		panic(err.Error())
+	}
+	if count > 0 {
+		if strings.Contains(tohum, "Buğday Tohumu") {
+			err = db.QueryRow("SELECT bugdaytohum_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&adet)
+			if err != nil {
+				panic(err.Error())
+			}
+		} else if strings.Contains(tohum, "Havuç Tohumu") {
+			err = db.QueryRow("SELECT havuctohum_adet FROM kullaniciveri WHERE kisi_id = ?", userID).Scan(&adet)
+			if err != nil {
+				panic(err.Error())
+			}
+		}
+	} else {
+		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	return adet
+}
+
+func mahsulSat(mahsul string, adet int64, userID string) {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	if strings.Contains(mahsul, "Buğday") {
+		_, err := db.Exec("UPDATE kullaniciveri SET bugday_adet = bugday_adet - ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		kullaniciGuncelle(db, userID, int(8500*adet))
+
+	} else if strings.Contains(mahsul, "Havuç") {
+		_, err := db.Exec("UPDATE kullaniciveri SET havuc_adet = havuc_adet - ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		kullaniciGuncelle(db, userID, int(6000*adet))
+	}
+}
+
+func tohumEk(tohum string, adet int64, userID string) {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	if strings.Contains(tohum, "Buğday Tohumu") {
+		_, err := db.Exec("UPDATE kullaniciveri SET bugdayekili_adet = bugdayekili_adet + ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+		_, err = db.Exec("UPDATE kullaniciveri SET bugdaytohum_adet = bugdaytohum_adet - ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+
+	} else if strings.Contains(tohum, "Havuç Tohumu") {
+		_, err := db.Exec("UPDATE kullaniciveri SET havucekili_adet = havucekili_adet + ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		_, err = db.Exec("UPDATE kullaniciveri SET havuctohum_adet = havuctohum_adet - ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+}
+
+func tohumVer(tohum string, adet int64, userID string) {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	if strings.Contains(tohum, "Buğday Tohumu") {
+		_, err := db.Exec("UPDATE kullaniciveri SET bugdaytohum_adet = bugdaytohum_adet + ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else if strings.Contains(tohum, "Havuç Tohumu") {
+		_, err := db.Exec("UPDATE kullaniciveri SET havuctohum_adet = havuctohum_adet + ? WHERE kisi_id = ?", adet, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+}
+
+func hayvanOlustur(hayvan string, adet int64, userID string) {
+	db, err := sql.Open("mysql", dsn(dbname))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	if strings.Contains(hayvan, "İnek") {
+		_, err := db.Exec("UPDATE kullaniciveri SET inek_adet = inek_adet + ?, inek_gelir = ? WHERE kisi_id = ?", adet, hayvanSeviye(userID)*10, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else if strings.Contains(hayvan, "Koyun") {
+		_, err = db.Exec("UPDATE kullaniciveri SET koyun_adet = koyun_adet + ?, koyun_gelir = ? WHERE kisi_id = ?", adet, hayvanSeviye(userID)*6, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else if strings.Contains(hayvan, "Tavuk") {
+		_, err = db.Exec("UPDATE kullaniciveri SET tavuk_adet = tavuk_adet + ?, tavuk_gelir = ? WHERE kisi_id = ?", adet, hayvanSeviye(userID)*3, userID)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+}
+
 func ciftlikSeviyeYukselt(userID string) {
 	db, err := sql.Open("mysql", dsn(dbname))
 	if err != nil {
@@ -197,95 +488,10 @@ func ciftlikSeviyeYukselt(userID string) {
 		if err != nil {
 			panic(err.Error())
 		}
-		hayvanGuncelle(db, userID)
 	} else {
 		_, err := db.Exec("INSERT INTO kullaniciveri (kisi_id, para) VALUES (?, ?)", userID, 100000)
 		if err != nil {
 			panic(err.Error())
-		}
-	}
-}
-
-func hayvanGuncelle(db *sql.DB, userID string) {
-
-	rows, err := db.Query("SELECT sahip_id FROM inekler WHERE sahip_id = ?", userID)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var userID string
-		err := rows.Scan(&userID)
-		if err != nil {
-			return
-		}
-		_, err = db.Exec("UPDATE inekler SET gelir = ? WHERE sahip_id = ?", ciftlikSeviye(userID)*10, userID)
-		if err != nil {
-			return
-		}
-	}
-
-	rows, err = db.Query("SELECT sahip_id FROM koyunlar WHERE sahip_id = ?", userID)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var userID string
-		err := rows.Scan(&userID)
-		if err != nil {
-			return
-		}
-		_, err = db.Exec("UPDATE koyunlar SET gelir = ? WHERE sahip_id = ?", ciftlikSeviye(userID)*6, userID)
-		if err != nil {
-			return
-		}
-	}
-
-	rows, err = db.Query("SELECT sahip_id FROM tavuklar WHERE sahip_id = ?", userID)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var userID string
-		err := rows.Scan(&userID)
-		if err != nil {
-			return
-		}
-		_, err = db.Exec("UPDATE tavuklar SET gelir = ? WHERE sahip_id = ?", ciftlikSeviye(userID)*3, userID)
-		if err != nil {
-			return
-		}
-	}
-}
-
-func hayvanOlustur(hayvan string, adet int64, userID string) {
-	db, err := sql.Open("mysql", dsn(dbname))
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-
-	for i := 0; i < int(adet); i++ {
-		if strings.Contains(hayvan, "İnek") {
-			_, err := db.Exec("INSERT INTO inekler (sahip_id, gelir) VALUES (?, ?)", userID, ciftlikSeviye(userID)*10)
-			if err != nil {
-				return
-			}
-		} else if strings.Contains(hayvan, "Koyun") {
-			_, err = db.Exec("INSERT INTO koyunlar (sahip_id, gelir) VALUES (?, ?)", userID, ciftlikSeviye(userID)*6)
-			if err != nil {
-				return
-			}
-		} else if strings.Contains(hayvan, "Tavuk") {
-			_, err = db.Exec("INSERT INTO tavuklar (sahip_id, gelir) VALUES (?, ?)", userID, ciftlikSeviye(userID)*3)
-			if err != nil {
-				return
-			}
 		}
 	}
 }
@@ -376,7 +582,7 @@ func xpKontrol(session *discordgo.Session, userID string, guildID string, channe
 }
 
 func inekGelir(db *sql.DB) {
-	rows, err := db.Query("SELECT gelir, sahip_id FROM inekler WHERE sahip_id != 0")
+	rows, err := db.Query("SELECT inek_adet, inek_gelir, kisi_id FROM kullaniciveri WHERE kisi_id != 0 and inek_adet != 0")
 	if err != nil {
 		return
 	}
@@ -384,17 +590,18 @@ func inekGelir(db *sql.DB) {
 
 	for rows.Next() {
 		var gelir int
+		var inek_adet int
 		var userID string
-		err := rows.Scan(&gelir, &userID)
+		err := rows.Scan(&inek_adet, &gelir, &userID)
 		if err != nil {
 			return
 		}
-		kullaniciGuncelle(db, userID, gelir)
+		kullaniciGuncelle(db, userID, gelir*inek_adet)
 	}
 }
 
 func koyunGelir(db *sql.DB) {
-	rows, err := db.Query("SELECT gelir, sahip_id FROM koyunlar WHERE sahip_id != 0")
+	rows, err := db.Query("SELECT koyun_adet, koyun_gelir, kisi_id FROM kullaniciveri WHERE kisi_id != 0 and koyun_adet != 0")
 	if err != nil {
 		return
 	}
@@ -402,17 +609,18 @@ func koyunGelir(db *sql.DB) {
 
 	for rows.Next() {
 		var gelir int
+		var koyun_adet int
 		var userID string
-		err := rows.Scan(&gelir, &userID)
+		err := rows.Scan(&koyun_adet, &gelir, &userID)
 		if err != nil {
 			return
 		}
-		kullaniciGuncelle(db, userID, gelir)
+		kullaniciGuncelle(db, userID, gelir*koyun_adet)
 	}
 }
 
 func tavukGelir(db *sql.DB) {
-	rows, err := db.Query("SELECT gelir, sahip_id FROM tavuklar WHERE sahip_id != 0")
+	rows, err := db.Query("SELECT tavuk_adet, tavuk_gelir, kisi_id FROM kullaniciveri WHERE kisi_id != 0 and tavuk_adet != 0")
 	if err != nil {
 		return
 	}
@@ -420,12 +628,115 @@ func tavukGelir(db *sql.DB) {
 
 	for rows.Next() {
 		var gelir int
+		var tavuk_adet int
 		var userID string
-		err := rows.Scan(&gelir, &userID)
+		err := rows.Scan(&tavuk_adet, &gelir, &userID)
 		if err != nil {
 			return
 		}
-		kullaniciGuncelle(db, userID, gelir)
+		kullaniciGuncelle(db, userID, gelir*tavuk_adet)
+	}
+}
+
+func bugdayYetisme(db *sql.DB, session *discordgo.Session) {
+	rows, err := db.Query("SELECT bugdayekili_adet, kisi_id FROM kullaniciveri WHERE kisi_id != 0 and bugdayekili_adet != 0")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var bugday_adet int
+		var userID string
+		err := rows.Scan(&bugday_adet, &userID)
+		if err != nil {
+			return
+		} else {
+			_, err := db.Exec("UPDATE kullaniciveri SET bugday_adet = bugday_adet + bugdayekili_adet WHERE kisi_id = ?", userID)
+			if err != nil {
+				panic(err.Error())
+			}
+			kullaniciGuncelle(db, userID, 10*bugday_adet)
+			channel, err := session.UserChannelCreate(userID)
+			if err == nil {
+
+				embed := &discordgo.MessageEmbed{
+					Description: "Buğday tohumlarınız yetişti! :farmer: :woman_farmer:",
+				}
+
+				_, err := db.Exec("UPDATE kullaniciveri SET bugdayekili_adet = 0 WHERE kisi_id = ?", userID)
+				if err != nil {
+					panic(err.Error())
+				}
+
+				_, err = session.ChannelMessageSendEmbed(channel.ID, embed)
+				if err != nil {
+					panic(err.Error())
+				}
+			}
+		}
+	}
+}
+
+func havucYetisme(db *sql.DB, session *discordgo.Session) {
+	rows, err := db.Query("SELECT havucekili_adet, kisi_id FROM kullaniciveri WHERE kisi_id != 0 and havucekili_adet != 0")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var havucekili_adet int
+		var userID string
+		err := rows.Scan(&havucekili_adet, &userID)
+		if err != nil {
+			return
+		} else {
+			_, err := db.Exec("UPDATE kullaniciveri SET havuc_adet = havuc_adet + havucekili_adet WHERE kisi_id = ?", userID)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			kullaniciGuncelle(db, userID, 10*havucekili_adet)
+			channel, err := session.UserChannelCreate(userID)
+			if err == nil {
+				embed := &discordgo.MessageEmbed{
+					Description: "Havuç tohumlarınız yetişti! :farmer: :woman_farmer:",
+				}
+
+				_, err := db.Exec("UPDATE kullaniciveri SET havucekili_adet = 0 WHERE kisi_id = ?", userID)
+				if err != nil {
+					panic(err.Error())
+				}
+
+				_, err = session.ChannelMessageSendEmbed(channel.ID, embed)
+				if err != nil {
+					panic(err.Error())
+				}
+			}
+		}
+	}
+}
+
+func bugdayTimer(session *discordgo.Session) {
+	for {
+		db, err := sql.Open("mysql", dsn(dbname))
+		if err != nil {
+			panic(err.Error())
+		}
+		bugdayYetisme(db, session)
+		time.Sleep(2 * time.Hour)
+	}
+}
+
+func havucTimer(session *discordgo.Session) {
+	for {
+		db, err := sql.Open("mysql", dsn(dbname))
+		if err != nil {
+			panic(err.Error())
+		}
+		havucYetisme(db, session)
+		time.Sleep(1 * time.Hour)
 	}
 }
 

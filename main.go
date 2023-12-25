@@ -65,6 +65,12 @@ func main() {
 			return
 		}
 
+		err = s.GuildMemberRoleAdd(event.GuildID, event.User.ID, rolID)
+		if err != nil {
+			log.Printf("%s", err)
+			return
+		}
+
 		var kanal string
 		var mesaj string
 		hata := db.QueryRow("SELECT kanal_id, giris_mesaj FROM sunucuveri WHERE sunucu_id=?", event.GuildID).Scan(&kanal, &mesaj)
@@ -80,10 +86,6 @@ func main() {
 		}
 
 		_, err = s.ChannelMessageSendEmbed(kanal, embed)
-		if err != nil {
-			return
-		}
-		err = s.GuildMemberRoleAdd(event.GuildID, event.User.ID, rolID)
 		if err != nil {
 			return
 		}
@@ -117,6 +119,16 @@ func main() {
 			Type:        discordgo.ChatApplicationCommand,
 		},
 		{
+			Name:        "hayvanfiyatları",
+			Description: "Hayvan fiyatlarını gösterir.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
+			Name:        "tohumfiyatları",
+			Description: "Tohum fiyatlarını gösterir.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
 			Name:        "çiftliğim",
 			Description: "Çiftliğinizin seviyesini ve sahip olduğunuz hayvanları gösterir.",
 			Type:        discordgo.ChatApplicationCommand,
@@ -125,6 +137,103 @@ func main() {
 			Name:        "çiftlikseviye",
 			Description: "Çiftliğinizin seviyesini yükseltmek için kullanılır.",
 			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
+			Name:        "hayvanseviye",
+			Description: "Hayvanlarınızın seviyesini yükseltmek için kullanılır.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
+			Name:        "tohumek",
+			Description: "Tohum ekmek için kullanılır",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "tohum",
+					Description: "Ekeceğiniz tohumu seçin.",
+					Required:    true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Buğday Tohumu",
+							Value: "Buğday Tohumu",
+						},
+						{
+							Name:  "Havuç Tohumu",
+							Value: "Havuç Tohumu",
+						},
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "adet",
+					Description: "Kaç adet tohum ekeceğinizi girin.",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "tohumsatinal",
+			Description: "Tohum satın almak için kullanılır.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "tohum",
+					Description: "Alacağınız tohumu seçin.",
+					Required:    true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Buğday Tohumu",
+							Value: "Buğday Tohumu",
+						},
+						{
+							Name:  "Havuç Tohumu",
+							Value: "Havuç Tohumu",
+						},
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "adet",
+					Description: "Kaç adet alacağınızı girin.",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "mahsülfiyatları",
+			Description: "Mahsül satış fiyatlarını gösterir.",
+			Type:        discordgo.ChatApplicationCommand,
+		},
+		{
+			Name:        "mahsülsat",
+			Description: "Mahsül satmak için kullanılır",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "mahsül",
+					Description: "Satacağınız mahsülü seçin.",
+					Required:    true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Buğday",
+							Value: "Buğday",
+						},
+						{
+							Name:  "Havuç",
+							Value: "Havuç",
+						},
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "adet",
+					Description: "Kaç adet mahsül ekeceğinizi girin.",
+					Required:    true,
+				},
+			},
 		},
 		{
 			Name:        "hayvanal",
@@ -250,6 +359,8 @@ func main() {
 	defer dg.Close()
 
 	go ciftlikTimer()
+	go bugdayTimer(dg)
+	go havucTimer(dg)
 
 	activity := discordgo.Activity{
 		Name: "/yardım",

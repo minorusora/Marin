@@ -15,6 +15,13 @@ Marin'i sunucunuza davet etmek ve kullanmaya başlamak için aşağıdaki adıml
    - `/çiftliğim`: Çiftliğinizin durumuna bakmak için kullanılır.
    - `/çiftlikseviye`: Çiftliğinizin seviyesini yükseltmek için kullanılır.
    - `/hayvanal`: Çiftliğinize hayvan almak için kullanılır.
+   - `/hayvanfiyatları:` Hayvan fiyatlarına bakmak için kullanılır.
+   - `/hayvanseviye:` Hayvanlarınızın seviyesini yükseltmek için kullanılır.
+   - `/tohumsatinal:` Tohum satın almak için kullanılır.
+   - `/tohumek:` Tohum ekmek için kullanılır.
+   - `/tohumfiyatları:` Tohum fiyatlarına bakmak için kullanılır.
+   - `/mahsülfiyatları:` Mahsül satış fiyatlarına bakmak için kullanılır.
+   - `/mahsülsat:` Mahsül satmak için kullanılır.
    - `/seviyem`: Seviyenize bakmak için kullanılır.
    - `/rolseç`: Yeni bir üye katıldığında ona verilecek otomatik rolü ayarlamak için kullanılır.
    - `/girişayarla`: Yeni üye girişlerinde; Göndereceğiniz mesajı ve kanalı ayarlamak için kullanılır.

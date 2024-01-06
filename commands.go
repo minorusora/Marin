@@ -76,7 +76,7 @@ func interactionCreate(session *discordgo.Session, interaction *discordgo.Intera
 			}
 			embedGonder(session, interaction, embed)
 		case "seviyem":
-			mesaj := fmt.Sprintf("%s, %s. seviyedesiniz. (%s/%s) :ringed_planet:", interaction.Member.Mention(), formatNumber(levelKontrol(interaction.Member.User.ID)), formatNumber(xpCheck(interaction.Member.User.ID)), formatNumber(levelKontrol(interaction.Member.User.ID)*240))
+			mesaj := fmt.Sprintf("%s, %s. seviyedesiniz. (%s/%s) :ringed_planet:", interaction.Member.Mention(), formatNumber(levelKontrol(interaction.Member.User.ID, interaction.GuildID)), formatNumber(xpCheck(interaction.Member.User.ID, interaction.GuildID)), formatNumber(levelKontrol(interaction.Member.User.ID, interaction.GuildID)*1024))
 			embed := &discordgo.MessageEmbed{
 				Description: mesaj,
 				Timestamp:   currentTime.Format(time.RFC3339),

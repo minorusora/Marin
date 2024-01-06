@@ -496,7 +496,7 @@ func ciftlikSeviyeYukselt(userID string) {
 	}
 }
 
-func xpCheck(userID string) int {
+func xpCheck(userID string, guildid string) int {
 	db, err := sql.Open("mysql", dsn(dbname))
 	if err != nil {
 		panic(err.Error())
@@ -505,22 +505,20 @@ func xpCheck(userID string) int {
 
 	var xp int
 	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ?", userID).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ? and sunucu_id = ?", userID, guildid).Scan(&count)
 	if err != nil {
 		panic(err.Error())
 	}
 	if count > 0 {
-		err = db.QueryRow("SELECT xp FROM xp WHERE kisi_id = ?", userID).Scan(&xp)
+		err = db.QueryRow("SELECT xp FROM xp WHERE kisi_id = ? and sunucu_id = ?", userID, guildid).Scan(&xp)
 		if err != nil {
 			panic(err.Error())
 		}
-	} else {
-		return 0
 	}
 	return xp
 }
 
-func levelKontrol(userID string) int {
+func levelKontrol(userID string, guildid string) int {
 	db, err := sql.Open("mysql", dsn(dbname))
 	if err != nil {
 		panic(err.Error())
@@ -529,12 +527,12 @@ func levelKontrol(userID string) int {
 
 	var level int
 	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ?", userID).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM xp WHERE kisi_id = ? and sunucu_id = ?", userID, guildid).Scan(&count)
 	if err != nil {
 		panic(err.Error())
 	}
 	if count > 0 {
-		err = db.QueryRow("SELECT level FROM xp WHERE kisi_id = ?", userID).Scan(&level)
+		err = db.QueryRow("SELECT level FROM xp WHERE kisi_id = ? and sunucu_id = ?", userID, guildid).Scan(&level)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -562,17 +560,17 @@ func xpKontrol(session *discordgo.Session, userID string, guildID string, channe
 			panic(err.Error())
 		}
 	} else {
-		toplam := levelKontrol(userID) * 240
-		if xpCheck(userID) >= toplam {
-			_, err := db.Exec("UPDATE xp SET level = ? WHERE kisi_id = ? and sunucu_id = ?", levelKontrol(userID)+1, userID, guildID)
+		toplam := levelKontrol(userID, guildID) * 1024
+		if xpCheck(userID, guildID) >= toplam {
+			_, err := db.Exec("UPDATE xp SET level = ? WHERE kisi_id = ? and sunucu_id = ?", levelKontrol(userID, guildID)+1, userID, guildID)
 			if err != nil {
 				panic(err.Error())
 			}
 
-			mesaj := fmt.Sprintf("<@"+userID+">"+" tebrikler, %d. seviyeye ulaştınız!", levelKontrol(userID))
+			mesaj := fmt.Sprintf("<@"+userID+">"+" tebrikler, %d. seviyeye ulaştınız!", levelKontrol(userID, guildID))
 			session.ChannelMessageSend(channelID, mesaj)
 		} else {
-			_, err := db.Exec("UPDATE xp SET xp = ? WHERE kisi_id = ? and sunucu_id = ?", xpCheck(userID)+10, userID, guildID)
+			_, err := db.Exec("UPDATE xp SET xp = ? WHERE kisi_id = ? and sunucu_id = ?", xpCheck(userID, guildID)+10, userID, guildID)
 			if err != nil {
 				panic(err.Error())
 			}
